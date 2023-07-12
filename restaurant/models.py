@@ -18,7 +18,7 @@ class Menu(models.Model):
     inventory = models.SmallIntegerField(default=1)
 
     def __str__(self): 
-        return self.title
+        return f'#{self.id} - {self.title}  (${str(self.price)})'
     
 
 class MenuItem(models.Model):
@@ -26,5 +26,8 @@ class MenuItem(models.Model):
     price = models.DecimalField(max_digits=6, decimal_places=2)
     inventory = models.SmallIntegerField()
 
+    def __str__(self): 
+        return f'#{self.id} - {self.title}  (${str(self.price)})'
+
     def get_item(self):
-        return f'{self.title} : {str(self.price)}'
+        return f'#{self.id} - {self.title}  (${str(self.price)})'
