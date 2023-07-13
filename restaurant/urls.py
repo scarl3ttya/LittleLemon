@@ -19,7 +19,6 @@ urlpatterns = [
     path('api/menu/<int:pk>', views.SingleMenuItemView.as_view()),    
     path('api/', include(router.urls)),
     path('api-token-auth/', obtain_auth_token),
-    path('auth/', include('djoser.urls')),
-    path('auth/', include('djoser.urls.authtoken')),
+    
    
 ]
