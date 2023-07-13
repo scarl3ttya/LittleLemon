@@ -27,7 +27,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -155,3 +154,5 @@ REST_FRAMEWORK = {
 DJOSER = {
     'USER_ID_FIELD':'username'
 }
+
+#handler404 = 'restaurant.views.custom_404'

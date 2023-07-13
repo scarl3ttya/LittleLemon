@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+  #button:hover{
+    background-color: #003300;
+  }
+</style>
+
+<section>
+  <article>
+    <h1>Make a reservation</h1>
+    <!--Begin row-->
+    <div class="row">
+      <!--Begin col-->
+      <div class="column">
+          {% csrf_token %}
+          <form method="POST" id="form">
+            <!-- {% csrf_token %} -->
+            <p>
+              <label for="reservation_name">Name:</label>
+              <input type="text" placeholder="**Your Name (required)" maxlength="200"  id="reservation_name" required />
+            </p>
+            <p>
+            <!-- Step 9: Part one -->
+            </p>
+            
+            <p>
+              <label for="reservation_date">Reservation Date: (Select the date first)</label>
+              <input type="date" id="reservation_date" name="reservation_date" />
+            </p>
+                         
+              <p>
+              <label for="reservation_time">Reservation time:</label>
+              <select id="reservation_time">
+                <!--<option value="0" disabled>Select time</option>-->
+              </select>
+            </p>
+
+            <p>
+              <label for="guest_count">Guest Count (2-8)</label>
+              <input type="number" id="guest_count" name="guest_count" min="1" max="8" value="2">  
+            </p>
+            
+            
+            <button type="button" id="button" style="">Reserve</button>
+          </form>
+      </div>
+      <!--End col-->
+
+      <!--Begin col-->
+      <div class="column">
+        <h2>Bookings For <span id="today"></span></h2>
+        <div id="bookings">
+        </div>
+      </div>
+      <!--End col-->
+    </div>
+    <!--End row-->
+
+  </article>
+</section>
+
+<script>
+
+/*
+* Vars & Const
+*/
+const date = new Date();
+const month = formatMonth(date.getMonth() + 1); 
+const todays_date = `${date.getFullYear()}-${month}-${date.getDate().toString().padStart(2, "0")}`;
+const reservation_name = document.getElementById('reservation_name');
+const reservation_date = document.getElementById('reservation_date');
+const reservation_time = document.getElementById('reservation_time');
+const guest_count = document.getElementById('guest_count');
+const submit_button = document.getElementById('button');
+
+reservation_date.value = todays_date;
+
+getBookings();
+
+/*
+* Event Listeners
+*/
+reservation_date.addEventListener('change', getBookings);
+
+submit_button.addEventListener('click', function (e) {
+
+  res_name = weakSanitize(reservation_name.value);
+
+  if(!res_name){
+    alert('Valid Reservation name is required.');
+    return;
+  }
+
+  const formdata = {
+    reservation_name: res_name,
+    reservation_date: reservation_date.value,
+    reservation_time: reservation_time.value,
+    guest_count: guest_count.value,
+  }
+
+  fetch("{% url 'bookings' %}", { method: 'post', body: JSON.stringify(formdata) })
+    .then(r => r.text())
+    .then(data => {
+      getBookings()
+    })
+})
+
+
+/*
+* Functions
+*/
+function formatMonth(month){
+  if(month<10){
+    return '0'+month;
+  }else{
+    return month;
+  }
+}
+
+function formatHrs(hrs) {
+  timeOfDay = (hrs > 11 ? "PM" : "AM");
+  if (hrs > 12)
+    hrs = hrs - 12;
+  return hrs + " " + timeOfDay;
+}
+
+function weakSanitize(text){
+  return text.replace(/<\/?[^>]+(>|$)/g, '')
+        .replace(/[()]/g, '').replace(/"/g, '').replace(/;/g, '');
+}
+
+function getBookings(){
+  let reserved_slots = []
+  const date = reservation_date.value
+  document.getElementById('today').innerHTML = date
+
+  fetch("{% url 'bookings' %}" + '?date=' + date)
+      .then(response => response.json())
+      .then(data => { 
+        reserved_slots = [];
+        bookings = '';
+        slot_options = '<option value="0" disabled>Select time</option>';
+
+        for(item in data){
+          reserved_slots.push(data[item].fields.reservation_time);
+          bookings += `<p>${data[item].fields.reservation_name} - ${formatHrs(data[item].fields.reservation_time)}</p>`       
+        }
+
+        for (i = 10; i < 20; i++){
+          const label = formatHrs(i)
+          if (reserved_slots.includes(i)){
+            slot_options += `<option value=${i} disabled>${label}</option>`;
+          }
+          else{
+            slot_options += `<option value=${i}>${label}</option>`;
+          }
+        }
+
+        document.getElementById('reservation_time').innerHTML = slot_options
+        
+        if(bookings==''){
+          bookings = "No bookings"
+        }
+        document.getElementById('bookings').innerHTML = bookings
+      })
+}
+
+
+</script>
+
+{% endblock %}
+
